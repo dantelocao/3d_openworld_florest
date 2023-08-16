@@ -7,13 +7,17 @@ public class player_movement : MonoBehaviour
 
     public float speed;
     public float rotationspeed;
+    public float jumpSpeed;
 
+    private float ySpeed;
+    private Animator animator;
     private CharacterController CharacterController;
 
     // Start is called before the first frame update
     void Start()
     {
         CharacterController = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
         
     }
 
@@ -28,12 +32,35 @@ public class player_movement : MonoBehaviour
         float magnitude = Mathf.Clamp01(direcao_movimento.magnitude) * speed;
         direcao_movimento.Normalize();
 
-        CharacterController.SimpleMove(direcao_movimento * magnitude);
+    
+        ySpeed += Physics.gravity.y * Time.deltaTime;
+
+        if(CharacterController.isGrounded)
+        {
+            ySpeed = -0.5f;
+        
+            if (Input.GetButtonDown("Jump"))
+            {
+                ySpeed = jumpSpeed;
+            }
+
+        }
+
+
+
+        Vector3 velocity = direcao_movimento * magnitude;
+        velocity.y = ySpeed;
+        CharacterController.Move(velocity * Time.deltaTime);
 
         if(direcao_movimento != Vector3.zero)
         {
+            animator.SetBool("isWalking", true);
             Quaternion rotacao = Quaternion.LookRotation(direcao_movimento, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, rotacao, rotationspeed * Time.deltaTime);
+        } 
+        else 
+        {
+            animator.SetBool("isWalking", false);
         }
 
     }
