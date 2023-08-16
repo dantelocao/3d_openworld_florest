@@ -6,9 +6,14 @@ public class player_movement : MonoBehaviour
 {
 
     public float speed;
+    public float rotationspeed;
+
+    private CharacterController CharacterController;
+
     // Start is called before the first frame update
     void Start()
     {
+        CharacterController = GetComponent<CharacterController>();
         
     }
 
@@ -19,9 +24,17 @@ public class player_movement : MonoBehaviour
         float input_vertical = Input.GetAxis("Vertical");
 
         Vector3 direcao_movimento = new Vector3(input_horizontal, 0, input_vertical);
+
+        float magnitude = Mathf.Clamp01(direcao_movimento.magnitude) * speed;
         direcao_movimento.Normalize();
 
-        transform.Translate(direcao_movimento * speed * Time.deltaTime);
+        CharacterController.SimpleMove(direcao_movimento * magnitude);
+
+        if(direcao_movimento != Vector3.zero)
+        {
+            Quaternion rotacao = Quaternion.LookRotation(direcao_movimento, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, rotacao, rotationspeed * Time.deltaTime);
+        }
 
     }
 }
