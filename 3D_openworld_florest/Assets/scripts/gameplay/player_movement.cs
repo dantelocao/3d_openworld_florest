@@ -12,6 +12,10 @@ public class player_movement : MonoBehaviour
     private float ySpeed;
     private Animator animator;
     private CharacterController CharacterController;
+    public Transform cam;
+
+    public float turnSmoothTime = 0.1f;
+    float  turnSmoothVelocity;
 
     // Start is called before the first frame update
     void Start()
@@ -32,8 +36,10 @@ public class player_movement : MonoBehaviour
         float magnitude = Mathf.Clamp01(direcao_movimento.magnitude) * speed;
         direcao_movimento.Normalize();
 
-    
         ySpeed += Physics.gravity.y * Time.deltaTime;
+        
+        Vector3 velocity = direcao_movimento * magnitude;
+        velocity.y = ySpeed;
 
         if(CharacterController.isGrounded)
         {
@@ -42,21 +48,19 @@ public class player_movement : MonoBehaviour
             if (Input.GetButtonDown("Jump"))
             {
                 ySpeed = jumpSpeed;
+                CharacterController.Move(velocity * Time.deltaTime);
             }
 
         }
 
-
-
-        Vector3 velocity = direcao_movimento * magnitude;
-        velocity.y = ySpeed;
-        CharacterController.Move(velocity * Time.deltaTime);
-
         if(direcao_movimento != Vector3.zero)
         {
             animator.SetBool("isWalking", true);
-            Quaternion rotacao = Quaternion.LookRotation(direcao_movimento, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, rotacao, rotationspeed * Time.deltaTime);
+            float targetAngle = Mathf.Atan2(direcao_movimento.x, direcao_movimento.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            CharacterController.Move(moveDir.normalized* speed * Time.deltaTime);
         } 
         else 
         {
